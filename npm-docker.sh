@@ -13,7 +13,7 @@ NODE_MAJOR="24"
 BLOCKFILE=".npm-docker-ignore"
 PORTSFILE=".npm-docker-ports"
 NODEVERSIONFILE=".nvmrc"
-WAN_ENABLED=0   # By default, disable WAN for safety. Set to 1 to enable by default when local network isolation is not working properly.
+FORCE_WAN_ENABLED=0   # By default, disable WAN for safety. Set to 1 to enable by default when local network isolation is not working properly.
 
 # If this file exists, the docker command will be echoed instead of executed.
 TESTFILE=".npm-docker-test"
@@ -194,7 +194,7 @@ if [ -f "$PORTSFILE" ]; then
     done < "$PORTSFILE"
 fi
 
-if [ "$WAN_ENABLED" -eq 0 ]; then
+if [ "$FORCE_WAN_ENABLED" -eq 0 ]; then
     # --- Create LAN-only network ---
     if [ "$TESTMODE" -eq 0 ]; then
         docker network create --driver bridge --internal lan_only >/dev/null 2>&1

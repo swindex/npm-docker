@@ -1,7 +1,7 @@
 
 # npm-docker
 
-A Windows batch script that runs `npm` commands inside Docker for complete isolation.  
+A Windows/Linux script that runs `npm` commands inside Docker for complete isolation.  
 Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows setups, and Node version enforcement.
 
 ---
@@ -10,12 +10,11 @@ Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows se
 
 - Runs ALL npm commands in Docker, no local Node/npm required.
 - Automatically detects `.nvmrc` and selects matching Node major version (e.g., `node:18-alpine`).
-- Supports hoisted / shared `node_modules` in monorepos (Yarn, pnpm, Turborepo, Nx).
+- Supports hoisted / shared `node_modules` in monorepos.
 - Automatically mounts nearest `node_modules` to `/app/node_modules`.
 - Supports blocklisted files through `.npm-docker-ignore`.
 - Supports port forwarding using `.npm-docker-ports`.
-- Pure Docker — no WSL or Node installations required.
-- Can replace `npm.cmd` completely.
+- Pure Docker — Node installations required.
 
 ---
 
@@ -42,9 +41,6 @@ Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows se
    ```bash
    sudo ln -sf /usr/local/bin/npm-docker /usr/local/bin/npm
    ```
-npm run start
-```
-
 ---
 
 ## Monorepo Support (Hoisted node_modules)
@@ -113,6 +109,15 @@ The script masks files/dirs using empty placeholders.
 | Safety | npm never touches your host — runs sandboxed in Docker |
 | Consistency | Same Node version, same OS, same environment across all machines |
 | Zero Host Pollution | No local Node, npm, or dependencies required |
+
+---
+## Known Issues
+
+- Large npm dependency trees can cause “file count” or inode errors in WSL2 when the project resides on a mounted Windows path (e.g. /mnt/c/...).
+  - Fix: Move the project to a native Linux path such as /home/user/ inside WSL2.
+
+- In WSL2, custom internal Docker networks may block all local host access, including forwarded ports like localhost:9000.
+   - Fix: Set FORCE_WAN_ENABLED=1 to allow both LAN and WAN access when needed.
 
 ---
 
