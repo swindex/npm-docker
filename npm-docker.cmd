@@ -91,6 +91,12 @@ set "PORTS="
 set "WIN_NPM_CACHE=%LOCALAPPDATA%/npm-cache"
 set "WIN_MASKDIR=%TEMP%/npm-docker-mask"
 
+if exist "%TESTFILE%" (
+    set "TESTMODE=1"
+) else (
+    set "TESTMODE=0"
+)
+
 REM ---- Node version detection from .nvmrc ----
 if exist "%NODEVERSIONFILE%" (
     for /f "delims=. tokens=1" %%V in ('type "%NODEVERSIONFILE%"') do (
@@ -102,17 +108,18 @@ if exist "%NODEVERSIONFILE%" (
         set "IMAGE=node:!NODE_MAJOR!-alpine"
     )
 )
-
 set "IMAGE=node:!NODE_MAJOR!-alpine"
-
 REM ---- End Node version detection ----
 
 REM ---- Docker availability check ----
-call docker version >nul 2>&1
-if errorlevel 1 (
-    echo Docker not found or not running.
-    exit /b 1
+if "%TESTMODE%"=="0" (
+    call docker version >nul 2>&1
+    if errorlevel 1 (
+        echo Docker not found or not running.
+        exit /b 1
+    )
 )
+
 REM ---- End docker check ----
 
 REM --- Ensure Windows npm cache directory exists ---
@@ -200,7 +207,9 @@ if exist "%PORTSFILE%" (
 )
 
 REM --- Create LAN-only network ---
-docker network create --subnet=172.28.0.0/16 --gateway=172.28.0.1 --internal lan_only >nul 2>&1
+if "%TESTMODE%"=="0" (
+    docker network create --subnet=172.28.0.0/16 --gateway=172.28.0.1 --internal lan_only >nul 2>&1
+)
 
 REM --- Determine if the npm command requires internet access ---
 echo %* | findstr /I "install update upgrade ci audit fund" >nul
@@ -214,11 +223,11 @@ if %errorlevel%==0 (
 
 REM --- Uncomment to debug mounts and ports ---
 
-if exist "%TESTFILE%" (
-REM --- Echo the docker command instead of executing ---
+if "%TESTMODE%"=="1" (
+    REM --- Echo the docker command instead of executing ---
     echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 ) else (
-REM --- Execute the docker command ---
+    REM --- Execute the docker command ---
     docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 )
 
