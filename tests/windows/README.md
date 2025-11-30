@@ -100,22 +100,6 @@ run-tests-simple.cmd
 - **Purpose**: Verify npm run uses LAN-only network (isolated)
 - **Expected**: `--network lan_only` flag present in docker command
 
-## Known Issues
-
-### Syntax Error in npm-docker.cmd
-There is a known syntax error in the current version of `npm-docker.cmd` when processing port mappings:
-
-**Error**: `is was unexpected at this time.`
-
-**Location**: Port mapping section that uses `findstr` with delayed expansion
-
-**Impact**: 
-- Test 01 (blank project) works correctly
-- Tests with port mapping configurations may fail
-- Tests with .nvmrc-only configurations may work
-
-**Workaround**: This issue would need to be fixed in `npm-docker.cmd` by adjusting the errorlevel handling in the port mapping section.
-
 ## Adding New Tests
 
 To add a new test scenario:
