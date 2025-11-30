@@ -16,7 +16,7 @@ Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows se
 - Automatically mounts nearest `node_modules` to `/app/node_modules`.
 - Supports blocklisted files through `.npm-docker-ignore`.
 - Supports port forwarding using `.npm-docker-ports`.
-- Pure Docker — Node installations required.
+- Pure Docker — Node installations NOT required.
 
 ---
 
