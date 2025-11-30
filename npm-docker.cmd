@@ -21,7 +21,7 @@ set "TESTFILE=.npm-docker-test"
 
 REM --- Help if no args---
 if "%~1"=="" (
-        echo -----------------------------------------------------------------
+    echo -----------------------------------------------------------------
     echo npm-docker Sandbox. Run npm commands inside Docker for isolation.
     echo -----------------------------------------------------------------
     echo.
@@ -130,7 +130,13 @@ if not exist "%WIN_NPM_CACHE%" (
 REM --- Mount npm cache ---
 
 REM --- Check if docker is installed in windows or wsl2 an mount appropriately ---
-for /f "delims=" %%K in ('docker info --format "{{.KernelVersion}}"') do set "KERNEL=%%K"
+if "%TESTMODE%"=="1" (
+    REM In test mode, assume Windows Docker
+    set "KERNEL=windows"
+) else (
+    REM Get kernel version from docker info
+    for /f "delims=" %%K in ('docker info --format "{{.KernelVersion}}"') do set "KERNEL=%%K"
+)
 echo %KERNEL% | findstr /I "microsoft" >nul
 if %errorlevel%==0 (
     echo Running npm in WSL2 Docker
@@ -150,16 +156,19 @@ set "MOUNTS=!MOUNTS! -v ./:/app"
 REM --- Hoisted / shared node_modules support (monorepo) ---
 REM If node_modules lives in the parent folder, mount it into /app/node_modules
 if exist "..\node_modules" (
-    set "MOUNTS=!MOUNTS! -v "../node_modules":/app/node_modules"
+    set "MOUNTS=!MOUNTS! -v "../node_modules":"/app/node_modules""
 )
 if exist "..\..\node_modules" (
-    set "MOUNTS=!MOUNTS! -v "../../node_modules":/app/node_modules"
+    set "MOUNTS=!MOUNTS! -v "../../node_modules":"/app/node_modules""
 )
 if exist "..\..\..\node_modules" (
-    set "MOUNTS=!MOUNTS! -v "../../../node_modules":/app/node_modules"
+    set "MOUNTS=!MOUNTS! -v "../../../node_modules":"/app/node_modules""
 )
 if exist "..\..\..\..\node_modules" (
-    set "MOUNTS=!MOUNTS! -v "../../../../node_modules":/app/node_modules"
+    set "MOUNTS=!MOUNTS! -v "../../../../node_modules":"/app/node_modules""
+)
+if exist "..\..\..\..\..\node_modules" (
+    set "MOUNTS=!MOUNTS! -v "../../../../../node_modules":"/app/node_modules""
 )
 REM --- End hoisted node_modules support ---
 

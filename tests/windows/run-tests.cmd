@@ -179,6 +179,40 @@ if !errorlevel! equ 0 (
 del output.txt >nul 2>&1
 echo.
 
+REM --- Test 08: Monorepo Support ---
+set /a TOTAL+=1
+echo [TEST 08] Monorepo support with subdirectory
+cd /d "%SCENARIOS_DIR%\08-monorepo-mounting\src\ui"
+call "%NPM_DOCKER%" install
+call "%NPM_DOCKER%" install > output.txt 2>&1
+findstr /C:"-v \"../../node_modules\":\"/app/node_modules\"" output.txt >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [PASS] Correct mount for monorepo subdirectory
+    set /a PASSED+=1
+) else (
+    echo [FAIL] Expected mount for ../node_modules:/app/node_modules
+    echo Output:
+    type output.txt
+    set /a FAILED+=1
+)
+
+REM Verify command output contains docker run --rm -it
+set /a TOTAL+=1
+findstr /C:"docker run --rm -it " output.txt >nul 2>&1 
+if !errorlevel! equ 0 (
+    echo [PASS] Docker run command detected
+    set /a PASSED+=1
+) else (
+    echo [FAIL] Docker run command not found
+    echo Output:
+    type output.txt
+    set /a FAILED+=1
+)
+
+del output.txt >nul 2>&1
+echo.
+
+
 echo ================================================================
 echo Test Summary:
 echo Total Tests: !TOTAL!
