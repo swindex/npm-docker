@@ -21,27 +21,27 @@ Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows se
 
 ## Installation
 
+### Windows
+
 1. Place `npm-docker.cmd` in a directory included in your `PATH`
    (e.g., `C:\npm-docker\`).
 2. Optionally rename it to `npm.cmd` to fully replace the host `npm`.
 3. Requires Docker installed and running.
 
----
+### Linux
 
-## 🛠️ Usage Examples
-
-```bash
-npm-docker -v
-npm-docker install
-npm-docker run build
-npm-docker run start
-```
-
-Or if renamed to `npm.cmd` (drop-in docker npm replacement):
-
-```bash
-npm install
-npm run build
+1. Copy the script to `/usr/local/bin/`:
+   ```bash
+   sudo cp npm-docker.sh /usr/local/bin/npm-docker
+   ```
+2. Make it executable:
+   ```bash
+   sudo chmod +x /usr/local/bin/npm-docker
+   ```
+3. Optionally create a symlink named `npm` to fully replace the host `npm`:
+   ```bash
+   sudo ln -sf /usr/local/bin/npm-docker /usr/local/bin/npm
+   ```
 npm run start
 ```
 

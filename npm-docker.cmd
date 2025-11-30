@@ -88,7 +88,7 @@ if "%~1"=="" (
 REM --- Initialize ---
 set "MOUNTS="
 set "PORTS="
-set "WIN_NPM_CACHE=%LOCALAPPDATA%/npm-cache"
+set "WIN_CACHE=%LOCALAPPDATA%/.cache"
 set "WIN_MASKDIR=%TEMP%/npm-docker-mask"
 
 if exist "%TESTFILE%" (
@@ -123,9 +123,17 @@ if "%TESTMODE%"=="0" (
 REM ---- End docker check ----
 
 REM --- Ensure Windows npm cache directory exists ---
-if not exist "%WIN_NPM_CACHE%" (
-    echo Creating npm cache directory at "%WIN_NPM_CACHE%"
-    mkdir "%WIN_NPM_CACHE%"
+if not exist "%WIN_CACHE%" (
+    echo Creating npm cache directory at "%WIN_CACHE%"
+    mkdir "%WIN_CACHE%"
+)
+if not exist "%WIN_CACHE%/npm" (
+    echo Creating npm cache directory at "%WIN_CACHE%/npm"
+    mkdir "%WIN_CACHE%/npm"
+)
+if not exist "%WIN_CACHE%/tmp" (
+    echo Creating npm cache directory at "%WIN_CACHE%/tmp"
+    mkdir "%WIN_CACHE%/tmp"
 )
 REM --- Mount npm cache ---
 
@@ -141,13 +149,16 @@ echo %KERNEL% | findstr /I "microsoft" >nul
 if %errorlevel%==0 (
     echo Running npm in WSL2 Docker
     REM get wslpath of appdata dir
-    for /f "delims=" %%P in ('wsl wslpath "%WIN_NPM_CACHE%"') do set "LINUX_WIN_NPM_CACHE=%%P"
+    for /f "delims=" %%P in ('wsl wslpath "%WIN_CACHE%"') do set "LINUX_WIN_CACHE=%%P"
     for /f "delims=" %%P in ('wsl wslpath "%WIN_MASKDIR%"') do set "MASKDIR=%%P"
-    set "MOUNTS=!MOUNTS! -v "!LINUX_WIN_NPM_CACHE!":"/root/.npm""
+    set "MOUNTS=!MOUNTS! -v "!LINUX_WIN_CACHE!/npm":"/root/.npm""
+    set "MOUNTS=!MOUNTS! -v "!LINUX_WIN_CACHE!/tmp":"/tmp""
+    
 ) else (
     echo Running npm in Windows Docker
     set "MASKDIR=!WIN_MASKDIR!"
-    set "MOUNTS=!MOUNTS! -v "%WIN_NPM_CACHE%":"/root/.npm""
+    set "MOUNTS=!MOUNTS! -v "%WIN_CACHE%/npm":"/root/.npm""
+    set "MOUNTS=!MOUNTS! -v "%WIN_CACHE%/tmp":"/tmp""
 )
 
 REM --- Base: mount whole project ---
@@ -236,6 +247,7 @@ if "%TESTMODE%"=="1" (
     REM --- Echo the docker command instead of executing ---
     echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 ) else (
+    echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
     REM --- Execute the docker command ---
     docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 )
