@@ -88,8 +88,7 @@ if "%~1"=="" (
 REM --- Initialize ---
 set "MOUNTS="
 set "PORTS="
-set "WIN_CACHE=%LOCALAPPDATA%/.cache"
-set "WIN_MASKDIR=%TEMP%/npm-docker-mask"
+set "CACHEDIR=/mnt/wsl/npm-docker"
 
 if exist "%TESTFILE%" (
     set "TESTMODE=1"
@@ -122,44 +121,11 @@ if "%TESTMODE%"=="0" (
 
 REM ---- End docker check ----
 
-REM --- Ensure Windows npm cache directory exists ---
-if not exist "%WIN_CACHE%" (
-    echo Creating npm cache directory at "%WIN_CACHE%"
-    mkdir "%WIN_CACHE%"
-)
-if not exist "%WIN_CACHE%/npm" (
-    echo Creating npm cache directory at "%WIN_CACHE%/npm"
-    mkdir "%WIN_CACHE%/npm"
-)
-if not exist "%WIN_CACHE%/tmp" (
-    echo Creating npm cache directory at "%WIN_CACHE%/tmp"
-    mkdir "%WIN_CACHE%/tmp"
-)
-REM --- Mount npm cache ---
+echo Running npm in WSL2 Docker
 
-REM --- Check if docker is installed in windows or wsl2 an mount appropriately ---
-if "%TESTMODE%"=="1" (
-    REM In test mode, assume Windows Docker
-    set "KERNEL=windows"
-) else (
-    REM Get kernel version from docker info
-    for /f "delims=" %%K in ('docker info --format "{{.KernelVersion}}"') do set "KERNEL=%%K"
-)
-echo %KERNEL% | findstr /I "microsoft" >nul
-if %errorlevel%==0 (
-    echo Running npm in WSL2 Docker
-    REM get wslpath of appdata dir
-    for /f "delims=" %%P in ('wsl wslpath "%WIN_CACHE%"') do set "LINUX_WIN_CACHE=%%P"
-    for /f "delims=" %%P in ('wsl wslpath "%WIN_MASKDIR%"') do set "MASKDIR=%%P"
-    set "MOUNTS=!MOUNTS! -v "!LINUX_WIN_CACHE!/npm":"/root/.npm""
-    set "MOUNTS=!MOUNTS! -v "!LINUX_WIN_CACHE!/tmp":"/tmp""
-    
-) else (
-    echo Running npm in Windows Docker
-    set "MASKDIR=!WIN_MASKDIR!"
-    set "MOUNTS=!MOUNTS! -v "%WIN_CACHE%/npm":"/root/.npm""
-    set "MOUNTS=!MOUNTS! -v "%WIN_CACHE%/tmp":"/tmp""
-)
+set "MOUNTS=!MOUNTS! -v "%CACHEDIR%/npm-cache":"/root/.npm""
+set "MOUNTS=!MOUNTS! -v "%CACHEDIR%/tmp-cache":"/tmp""
+
 
 REM --- Base: mount whole project ---
 set "MOUNTS=!MOUNTS! -v ./:/app"
@@ -186,13 +152,8 @@ REM --- End hoisted node_modules support ---
 REM --- Apply masks for blocklisted files/directories ---
 if exist "%BLOCKFILE%" (
     echo Using ignore list: %BLOCKFILE%
-    REM Ensure mask dir and file exist
-    if not exist "%WIN_MASKDIR%" (
-        mkdir "%WIN_MASKDIR%"
-    )
-    if not exist "%WIN_MASKDIR%/dummyfile" (
-        copy /y nul "%WIN_MASKDIR%/dummyfile" >nul
-    )
+    set "MASKDIR=!CACHEDIR!/mask"
+
     for /f "usebackq tokens=* delims=" %%A in ("%BLOCKFILE%") do (
         set "LINE=%%A"
         if not "!LINE!"=="" if not "!LINE:~0,1!"=="#" (
@@ -241,13 +202,9 @@ if %errorlevel%==0 (
     set "NET=--network lan_only"
 )
 
-REM --- Uncomment to debug mounts and ports ---
+echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 
-if "%TESTMODE%"=="1" (
-    REM --- Echo the docker command instead of executing ---
-    echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
-) else (
-    echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
+if "%TESTMODE%"=="0" (
     REM --- Execute the docker command ---
     docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 )
