@@ -4,6 +4,8 @@
 A Windows/Linux script that runs `npm` commands inside Docker for complete isolation.  
 Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows setups, and Node version enforcement.
 
+
+![command-line output](docs/screenshot-1.png)
 ---
 
 ## Features
