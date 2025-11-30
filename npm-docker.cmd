@@ -1,12 +1,12 @@
-REM @echo off
+@echo off
 REM npm-docker.cmd
 REM Run npm commands inside Docker for isolation.
 REM Created by Eldar Gerfanov. License: MIT.
-REM Place this script in C:\proxy-scripts\ and add to PATH.
+REM Place this script in C:\npm-docker\ and add to PATH.
 REM Optionally rename to npm.cmd to replace host npm. Make sure it's first in PATH.
 REM Local npm installation is not required. In fact it is much safer if it's not installed!
 REM Requires Docker to be installed and running.
-REM For more help, run without arguments.
+REM For more help, run npm-docker on npm without arguments.
 
 setlocal ENABLEDELAYEDEXPANSION
 
@@ -19,9 +19,9 @@ set "NODEVERSIONFILE=.nvmrc"
 REM If this file exists, the docker command will be echoed instead of executed.
 set "TESTFILE=.npm-docker-test"  
 
-REM Help if no args
+REM --- Help if no args---
 if "%~1"=="" (
-    echo -----------------------------------------------------------------
+        echo -----------------------------------------------------------------
     echo npm-docker Sandbox. Run npm commands inside Docker for isolation.
     echo -----------------------------------------------------------------
     echo.
@@ -41,16 +41,16 @@ if "%~1"=="" (
     echo - Local npm installation is not required!
     echo.
     echo Installation:
-    echo - Place the npm-docker.cmd into C:\proxy-scripts\ and add it to your PATH.
+    echo - Place the npm-docker.cmd into C:\npm-docker\ and add it to your PATH.
     echo - Make sure to put it first in PATH.
     echo - Optionally, rename it to npm.cmd to replace host npm.
     echo   It allows this script to become almost a drop-in replacement for npm.
     echo   The only difference is that it runs inside Docker and requires .npm-docker-ports for port mapping if you plan to serve apps.
     echo.
     echo Node version:
-    echo - By default, Node.js %NODE_MAJOR% (node:%NODE_MAJOR%-alpine) is used inside the Docker container.
+    echo - By default, Node.js %NODE_MAJOR% node:%NODE_MAJOR%-alpine is used inside the Docker container.
     echo - To specify a different Node.js version, create a .nvmrc file in the project root
-    echo   with the desired version number (e.g., "18.6.5" for Node.js 18.x). Only the major version is considered.
+    echo   with the desired version number e.g., "18.6.5" for Node.js 18.x. Only the major version is considered.
     echo.
     echo Port Mapping:
     echo - By default, no ports are mapped from the Docker container to the host.
@@ -93,11 +93,9 @@ set "WIN_MASKDIR=%TEMP%/npm-docker-mask"
 
 REM ---- Node version detection from .nvmrc ----
 if exist "%NODEVERSIONFILE%" (
-	echo %NODEVERSIONFILE% file detected.
     for /f "delims=. tokens=1" %%V in ('type "%NODEVERSIONFILE%"') do (
         set "NODE_MAJOR=%%V"
     )
-	echo Using node version !NODE_MAJOR!
 
     if defined NODE_MAJOR (
         echo Detected .nvmrc: Node major version !NODE_MAJOR!
@@ -192,8 +190,7 @@ if exist "%PORTSFILE%" (
         if not "!LINE!"=="" if not "!LINE:~0,1!"=="#" (
             REM If line contains colon, pass directly. Otherwise, map same:same
             echo !LINE! | findstr ":" >nul
-            set "HAS_COLON=!errorlevel!"
-            if !HAS_COLON! equ 0 (
+            if !errorlevel! equ 0 (
                 set "PORTS=!PORTS! -p !LINE!"
             ) else (
                 set "PORTS=!PORTS! -p !LINE!:!LINE!"
@@ -216,11 +213,12 @@ if %errorlevel%==0 (
 )
 
 REM --- Uncomment to debug mounts and ports ---
+
 if exist "%TESTFILE%" (
-    REM --- Echo the docker command instead of executing ---
+REM --- Echo the docker command instead of executing ---
     echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 ) else (
-    REM --- Execute the docker command ---
+REM --- Execute the docker command ---
     docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
 )
 

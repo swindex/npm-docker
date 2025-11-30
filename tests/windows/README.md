@@ -53,6 +53,16 @@ run-tests-simple.cmd
 - Tests `.nvmrc` (Node 20) + `.npm-docker-ports` (4000:4000)
 - Ensures multiple features work together
 
+✅ **Test 06: Network - npm install**
+- Verifies `npm install` uses normal network (no isolation)
+- Confirms no `--network lan_only` flag is present
+- Checks for "Normal network enabled" message
+
+✅ **Test 07: Network - npm run**
+- Verifies `npm run` uses LAN-only network (isolated)
+- Confirms `--network lan_only` flag is present
+- Ensures network isolation for running scripts
+
 ## Test Scenarios Details
 
 ### Scenario 01: Blank Project
@@ -79,6 +89,16 @@ run-tests-simple.cmd
 - **Files**: `.nvmrc` (contains "20"), `.npm-docker-ports` (contains "4000:4000"), `.npm-docker-test`
 - **Purpose**: Test multiple features working together
 - **Expected**: `node:20-alpine` AND `-p 4000:4000`
+
+### Scenario 06: Network Check - npm install
+- **Files**: `.npm-docker-test`
+- **Purpose**: Verify npm install uses normal network (no isolation)
+- **Expected**: No `--network lan_only` flag, "Normal network enabled" message present
+
+### Scenario 07: Network Check - npm run
+- **Files**: `.npm-docker-test`
+- **Purpose**: Verify npm run uses LAN-only network (isolated)
+- **Expected**: `--network lan_only` flag present in docker command
 
 ## Known Issues
 

@@ -22,7 +22,7 @@ Safe, host-agnostic, and ideal for monorepos, CI environments, legacy Windows se
 ## Installation
 
 1. Place `npm-docker.cmd` in a directory included in your `PATH`
-   (e.g., `C:\proxy-scripts\`).
+   (e.g., `C:\npm-docker\`).
 2. Optionally rename it to `npm.cmd` to fully replace the host `npm`.
 3. Requires Docker installed and running.
 
