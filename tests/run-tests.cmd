@@ -11,7 +11,7 @@ echo ================================================================
 echo.
 
 set "SCRIPT_DIR=%~dp0"
-set "NPM_DOCKER=%SCRIPT_DIR%..\..\npm-docker.cmd"
+set "NPM_DOCKER=%SCRIPT_DIR%..\npm-docker.cmd"
 set "SCENARIOS_DIR=%SCRIPT_DIR%scenarios"
 set "PASSED=0"
 set "FAILED=0"
