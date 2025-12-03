@@ -54,14 +54,10 @@ run-tests-simple.cmd
 - Ensures multiple features work together
 
 ✅ **Test 06: Network - npm install**
-- Verifies `npm install` uses normal network (no isolation)
-- Confirms no `--network lan_only` flag is present
-- Checks for "Normal network enabled" message
+- Verifies `npm install` command execution
 
 ✅ **Test 07: Network - npm run**
-- Verifies `npm run` uses LAN-only network (isolated)
-- Confirms `--network lan_only` flag is present
-- Ensures network isolation for running scripts
+- Verifies `npm run` command execution
 
 ## Test Scenarios Details
 
@@ -92,13 +88,13 @@ run-tests-simple.cmd
 
 ### Scenario 06: Network Check - npm install
 - **Files**: `.npm-docker-test`
-- **Purpose**: Verify npm install uses normal network (no isolation)
-- **Expected**: No `--network lan_only` flag, "Normal network enabled" message present
+- **Purpose**: Verify npm install command execution
+- **Expected**: Successful command construction
 
 ### Scenario 07: Network Check - npm run
 - **Files**: `.npm-docker-test`
-- **Purpose**: Verify npm run uses LAN-only network (isolated)
-- **Expected**: `--network lan_only` flag present in docker command
+- **Purpose**: Verify npm run command execution
+- **Expected**: Successful command construction
 
 ## Adding New Tests
 

@@ -46,11 +46,11 @@ echo
 echo "[TEST 02] Version check shows npm -v"
 cd "$SCENARIOS_DIR/02-default-version"
 bash "$NPM_DOCKER" -v > output.txt 2>&1
-if grep -q "npm -v" output.txt; then
-    echo "[PASS] Command includes 'npm -v'"
+if grep -q "npm --ignore-scripts -v" output.txt; then
+    echo "[PASS] Command includes 'npm --ignore-scripts -v'"
     ((PASSED++))
 else
-    echo "[FAIL] Expected 'npm -v' in output"
+    echo "[FAIL] Expected 'npm --ignore-scripts -v' in output"
     echo "Output:"
     cat output.txt
     ((FAILED++))
@@ -128,63 +128,6 @@ else
     ((FAILED++))
 fi
 
-rm -f output.txt
-echo
-
-# --- Test 06: Network Check - npm install (Normal Network) ---
-((TOTAL++))
-echo "[TEST 06] npm install uses normal network"
-cd "$SCENARIOS_DIR/06-network-install"
-bash "$NPM_DOCKER" install > output.txt 2>&1
-
-# Check that network flag is NOT present (normal network)
-if grep -q "\-\-network lan_only" output.txt; then
-    HAS_LAN_ONLY=0
-else
-    HAS_LAN_ONLY=1
-fi
-
-if grep -qi "Normal network enabled" output.txt; then
-    HAS_NORMAL_MSG=0
-else
-    HAS_NORMAL_MSG=1
-fi
-
-if [ $HAS_LAN_ONLY -eq 0 ]; then
-    echo "[FAIL] npm install should NOT use --network lan_only"
-    echo "Output:"
-    cat output.txt
-    ((FAILED++))
-else
-    if [ $HAS_NORMAL_MSG -eq 0 ]; then
-        echo "[PASS] npm install uses normal network (no --network flag)"
-        ((PASSED++))
-    else
-        echo "[FAIL] Expected \"Normal network enabled\" message"
-        echo "Output:"
-        cat output.txt
-        ((FAILED++))
-    fi
-fi
-rm -f output.txt
-echo
-
-# --- Test 07: Network Check - npm run (LAN-only Network) ---
-((TOTAL++))
-echo "[TEST 07] npm run uses LAN-only network"
-cd "$SCENARIOS_DIR/07-network-run"
-bash "$NPM_DOCKER" run start > output.txt 2>&1
-
-# Check that network flag IS present (LAN-only)
-if grep -q "\-\-network lan_only" output.txt; then
-    echo "[PASS] npm run uses --network lan_only"
-    ((PASSED++))
-else
-    echo "[FAIL] Expected --network lan_only flag"
-    echo "Output:"
-    cat output.txt
-    ((FAILED++))
-fi
 rm -f output.txt
 echo
 

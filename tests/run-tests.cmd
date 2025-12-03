@@ -49,12 +49,12 @@ set /a TOTAL+=1
 echo [TEST 02] Version check shows npm -v
 cd /d "%SCENARIOS_DIR%\02-default-version"
 call "%NPM_DOCKER%" -v > output.txt 2>&1
-findstr /C:"npm -v" output.txt >nul 2>&1
+findstr /C:"npm --ignore-scripts -v" output.txt >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [PASS] Command includes 'npm -v'
+    echo [PASS] Command includes 'npm --ignore-scripts -v'
     set /a PASSED+=1
 ) else (
-    echo [FAIL] Expected 'npm -v' in output
+    echo [FAIL] Expected 'npm --ignore-scripts -v' in output
     echo Output:
     type output.txt
     set /a FAILED+=1
@@ -124,58 +124,6 @@ if !NODE_CHECK! equ 0 if !PORT_CHECK! equ 0 (
     set /a FAILED+=1
 )
 
-del output.txt >nul 2>&1
-echo.
-
-REM --- Test 06: Network Check - npm install (Normal Network) ---
-set /a TOTAL+=1
-echo [TEST 06] npm install uses normal network
-cd /d "%SCENARIOS_DIR%\06-network-install"
-call "%NPM_DOCKER%" install > output.txt 2>&1
-
-REM Check that network flag is NOT present (normal network)
-findstr /C:"--network lan_only" output.txt >nul 2>&1
-set "HAS_LAN_ONLY=!errorlevel!"
-
-findstr /I "Normal network enabled" output.txt >nul 2>&1
-set "HAS_NORMAL_MSG=!errorlevel!"
-
-if !HAS_LAN_ONLY! equ 0 (
-    echo [FAIL] npm install should NOT use --network lan_only
-    echo Output:
-    type output.txt
-    set /a FAILED+=1
-) else (
-    if !HAS_NORMAL_MSG! equ 0 (
-        echo [PASS] npm install uses normal network (no --network flag^)
-        set /a PASSED+=1
-    ) else (
-        echo [FAIL] Expected "Normal network enabled" message
-        echo Output:
-        type output.txt
-        set /a FAILED+=1
-    )
-)
-del output.txt >nul 2>&1
-echo.
-
-REM --- Test 07: Network Check - npm run (LAN-only Network) ---
-set /a TOTAL+=1
-echo [TEST 07] npm run uses LAN-only network
-cd /d "%SCENARIOS_DIR%\07-network-run"
-call "%NPM_DOCKER%" run start > output.txt 2>&1
-
-REM Check that network flag IS present (LAN-only)
-findstr /C:"--network lan_only" output.txt >nul 2>&1
-if !errorlevel! equ 0 (
-    echo [PASS] npm run uses --network lan_only
-    set /a PASSED+=1
-) else (
-    echo [FAIL] Expected --network lan_only flag
-    echo Output:
-    type output.txt
-    set /a FAILED+=1
-)
 del output.txt >nul 2>&1
 echo.
 

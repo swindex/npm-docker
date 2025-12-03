@@ -187,26 +187,41 @@ if exist "%PORTSFILE%" (
     )
 )
 
-REM --- Create LAN-only network ---
-if "%TESTMODE%"=="0" (
-    docker network create --subnet=172.28.0.0/16 --gateway=172.28.0.1 --internal lan_only >nul 2>&1
+REM --- Detect ignore-scripts in local, user, or global npmrc ---
+set "IGNORE_SCRIPTS_FLAG="
+
+REM 1) Local .npmrc (project folder)
+if exist ".npmrc" (
+    findstr /I "ignore-scripts=true" ".npmrc" >nul 2>&1
+    if not errorlevel 1 (
+        set "IGNORE_SCRIPTS_FLAG=--ignore-scripts"
+    )
 )
 
-REM --- Determine if the npm command requires internet access ---
-echo %* | findstr /I "install update upgrade ci audit fund" >nul
-if %errorlevel%==0 (
-    echo Normal network enabled for npm %1
-    set "NET="
-) else (
-    echo Using LAN-only network: WAN disabled
-    set "NET=--network lan_only"
+REM 2) User-level npmrc (%USERPROFILE%\.npmrc)
+if "%IGNORE_SCRIPTS_FLAG%"=="" if exist "%USERPROFILE%\.npmrc" (
+    findstr /I "ignore-scripts=true" "%USERPROFILE%\.npmrc" >nul 2>&1
+    if not errorlevel 1 (
+        set "IGNORE_SCRIPTS_FLAG=--ignore-scripts"
+    )
 )
 
-echo docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
+REM 3) Global npmrc (show config and grep value)
+if "%IGNORE_SCRIPTS_FLAG%"=="" (
+    npm config get ignore-scripts 2>nul | findstr /I "^true$" >nul
+    if not errorlevel 1 (
+        set "IGNORE_SCRIPTS_FLAG=--ignore-scripts"
+    )
+)
+
+REM Now apply flag to final NPM command:
+set "NPMCMD=npm %IGNORE_SCRIPTS_FLAG% %*"
+
+echo docker run --rm -it %MOUNTS% %PORTS% -w /app %IMAGE% %NPMCMD%
 
 if "%TESTMODE%"=="0" (
     REM --- Execute the docker command ---
-    docker run --rm -it %NET% %MOUNTS% %PORTS% -w /app %IMAGE% npm %*
+    docker run --rm -it %MOUNTS% %PORTS% -w /app %IMAGE% %NPMCMD%
 )
 
 endlocal

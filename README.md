@@ -1,7 +1,7 @@
 
 # npm-docker
 
-A Windows/Linux script that runs `npm` commands inside Docker for complete isolation.
+A Windows/Linux script that runs `npm` commands inside Docker containers.
 
 
 ![command-line output](docs/screenshot-1.png)
@@ -107,18 +107,33 @@ The script masks files/dirs using empty placeholders.
 
 | Benefit | Description |
 |---------|-------------|
-| Safety | npm never touches your host — runs sandboxed in Docker |
+| Safety | npm runs sandboxed in Docker |
 | Consistency | Same Node version, same OS, same environment across all machines |
 | Zero Host Pollution | No local Node, npm, or dependencies required |
 
 ---
+
+## Script Execution Configuration
+
+**npm-docker** respects the `ignore-scripts=true` setting in your `.npmrc` file (local or global).
+
+This is **recommended** for security — it prevents automatic execution of npm lifecycle scripts (preinstall, postinstall, etc.) which can be a security risk.
+
+To enable, add to your `.npmrc` file:
+```
+ignore-scripts=true
+```
+
+Or set it globally:
+```bash
+npm config set ignore-scripts true
+```
+
+---
 ## Known Issues
 
-- Large npm dependency trees can cause “file count” or inode errors in WSL2 when the project resides on a mounted Windows path (e.g. /mnt/c/...).
+- Large npm dependency trees can cause "file count" or inode errors in WSL2 when the project resides on a mounted Windows path (e.g. /mnt/c/...).
   - Fix: Move the project to a native Linux path such as /home/user/ inside WSL2.
-
-- In WSL2, custom internal Docker networks may block all local host access, including forwarded ports like localhost:9000.
-   - Fix: Set FORCE_WAN_ENABLED=1 to allow both LAN and WAN access when needed.
 
 ---
 
@@ -147,4 +162,3 @@ enjoy isolated npm everywhere
 Pull requests welcome!
 
 ---
-

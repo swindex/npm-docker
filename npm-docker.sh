@@ -13,7 +13,6 @@ NODE_MAJOR="24"
 BLOCKFILE=".npm-docker-ignore"
 PORTSFILE=".npm-docker-ports"
 NODEVERSIONFILE=".nvmrc"
-FORCE_WAN_ENABLED=0   # By default, disable WAN for safety. Set to 1 to enable by default when local network isolation is not working properly.
 
 # If this file exists, the docker command will be echoed instead of executed.
 TESTFILE=".npm-docker-test"
@@ -194,33 +193,41 @@ if [ -f "$PORTSFILE" ]; then
     done < "$PORTSFILE"
 fi
 
-if [ "$FORCE_WAN_ENABLED" -eq 0 ]; then
-    # --- Create LAN-only network ---
-    if [ "$TESTMODE" -eq 0 ]; then
-        docker network create --driver bridge --internal lan_only >/dev/null 2>&1
-    fi
+# --- Detect ignore-scripts in local, user, or global npmrc ---
 
-    # --- Determine if the npm command requires internet access ---
-    if echo "$*" | grep -qiE "install|update|upgrade|ci|audit|fund"; then
-        echo "Normal network enabled for npm $1"
-        NET=""
-    else
-        echo "Using LAN-only network: WAN disabled"
-        NET="--network lan_only"
+IGNORE_SCRIPTS_FLAG=""
+
+# 1) Local .npmrc
+if [ -f "./.npmrc" ]; then
+    if grep -qi "^ignore-scripts=true" "./.npmrc"; then
+        IGNORE_SCRIPTS_FLAG="--ignore-scripts"
     fi
-else
-    echo "WAN access enabled."
-    NET=""
 fi
 
+# 2) User-level .npmrc
+if [ -z "$IGNORE_SCRIPTS_FLAG" ] && [ -f "$HOME/.npmrc" ]; then
+    if grep -qi "^ignore-scripts=true" "$HOME/.npmrc"; then
+        IGNORE_SCRIPTS_FLAG="--ignore-scripts"
+    fi
+fi
+
+# 3) Global npm config
+if [ -z "$IGNORE_SCRIPTS_FLAG" ]; then
+    if npm config get ignore-scripts 2>/dev/null | grep -qi "^true$"; then
+        IGNORE_SCRIPTS_FLAG="--ignore-scripts"
+    fi
+fi
+
+# Build final npm command
+NPMCMD="npm $IGNORE_SCRIPTS_FLAG $@"
+
 # --- Execute or echo the docker command ---
-if [ "$TESTMODE" -eq 1 ]; then
     # --- Echo the docker command instead of executing ---
-    echo "docker run --rm -it $NET $MOUNTS $PORTS -w /app $IMAGE npm $*"
-else
-    echo "docker run --rm -it $NET $MOUNTS $PORTS -w /app $IMAGE npm $*"
+    echo "docker run --rm -it $NET $MOUNTS $PORTS -w /app $IMAGE $NPMCMD"
+if [ "$TESTMODE" -eq  ]; then
+
     # --- Execute the docker command ---
-    eval docker run --rm -it $NET $MOUNTS $PORTS -w /app $IMAGE npm "$@"
+    eval docker run --rm -it $NET $MOUNTS $PORTS -w /app $IMAGE $NPMCMD
     # clear keyboard interrupt signal to avoid issues in some environments
     trap '' INT
 fi
